@@ -1,0 +1,23 @@
+# Python
+backend/.venv/
+backend/__pycache__/
+backend/**/*.pyc
+backend/.pytest_cache/
+
+# Node / Next.js
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+
+# Environment files
+backend/.env
+frontend/.env.local
+frontend/.env*.local
+
+# OS / editor
+.DS_Store
+Thumbs.db
+
+# Project output / scratch
+work/
+outputs/
