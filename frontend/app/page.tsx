@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { ArrowRight, ShieldCheck, Zap } from "lucide-react";
+import { ArrowRight, RefreshCcw, ShieldCheck, Zap } from "lucide-react";
 
 import { ErrorBanner } from "@/components/error-banner";
 import { LoadingSkeleton } from "@/components/loading-skeleton";
@@ -51,6 +51,12 @@ export default function HomePage() {
     }
   }
 
+  function resetExperience() {
+    setAnalysis(null);
+    setError(null);
+    setSelectedFileName(null);
+  }
+
   return (
     <main className="min-h-screen px-4 py-8 md:px-8 lg:px-12">
       <div className="mx-auto max-w-7xl">
@@ -83,16 +89,34 @@ export default function HomePage() {
         <div className="space-y-6">
           {error ? <ErrorBanner message={error} onDismiss={() => setError(null)} /> : null}
 
-          <UploadZone disabled={isLoading} onSelectFile={handleFileUpload} />
+          <UploadZone
+            disabled={isLoading}
+            selectedFileName={selectedFileName}
+            onSelectFile={handleFileUpload}
+            onInvalidFile={setError}
+          />
 
           {selectedFileName ? (
-            <div className="rounded-full border border-stone-200 bg-white/70 px-4 py-3 text-sm text-stone-700 shadow-sm backdrop-blur">
-              Current file: <span className="font-semibold text-stone-950">{selectedFileName}</span>
+            <div className="flex flex-col gap-3 rounded-[28px] border border-stone-200 bg-white/70 px-4 py-4 text-sm text-stone-700 shadow-sm backdrop-blur md:flex-row md:items-center md:justify-between">
+              <div>
+                Current file: <span className="font-semibold text-stone-950">{selectedFileName}</span>
+              </div>
+              {(analysis || error) && (
+                <button
+                  type="button"
+                  onClick={resetExperience}
+                  className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-stone-700 transition hover:bg-stone-50"
+                >
+                  <RefreshCcw className="h-4 w-4" />
+                  Try another bill
+                </button>
+              )}
             </div>
           ) : null}
 
           {isLoading ? <LoadingSkeleton /> : null}
           {!isLoading && analysis ? <ResultsDashboard analysis={analysis} /> : null}
+          {!isLoading && !analysis ? <EmptyState /> : null}
         </div>
       </div>
     </main>
@@ -106,6 +130,99 @@ function FeaturePill({ label, icon }: { label: string; icon: ReactNode }) {
         <span className="text-teal-700">{icon}</span>
         <span>{label}</span>
       </div>
+    </div>
+  );
+}
+
+function EmptyState() {
+  return (
+    <section className="grid gap-6 animate-float-up xl:grid-cols-[0.95fr_1.05fr]">
+      <div className="glass-panel rounded-[32px] p-7">
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-stone-600">
+          What you will get
+        </p>
+        <h2
+          className="mt-3 text-3xl font-bold tracking-tight text-stone-950"
+          style={{ fontFamily: "var(--font-heading), sans-serif" }}
+        >
+          A fast, human-readable audit of a confusing bill.
+        </h2>
+        <div className="mt-6 space-y-4">
+          <ExpectationStep
+            title="1. Extract charges"
+            body="We pull out the total, currency, and itemized line items from the uploaded bill."
+          />
+          <ExpectationStep
+            title="2. Explain each fee"
+            body="Every charge gets rewritten in plain English so the bill is easier to understand."
+          />
+          <ExpectationStep
+            title="3. Highlight red flags"
+            body="Anything unusual, duplicative, or vague gets surfaced in a dedicated warning section."
+          />
+        </div>
+      </div>
+
+      <div className="glass-panel rounded-[32px] p-7">
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-stone-600">
+          Demo preview
+        </p>
+        <div className="mt-4 rounded-[28px] border border-stone-200 bg-white/80 p-5">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm text-stone-600">Expected dashboard summary</p>
+              <h3
+                className="mt-2 text-3xl font-bold text-stone-950"
+                style={{ fontFamily: "var(--font-heading), sans-serif" }}
+              >
+                $184.27
+              </h3>
+            </div>
+            <div className="rounded-full border border-red-200 bg-red-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-red-700">
+              2 charges flagged
+            </div>
+          </div>
+
+          <div className="mt-6 space-y-3">
+            <PreviewLineItem label="Base service plan" amount="$89.99" tone="neutral" />
+            <PreviewLineItem label="Regulatory recovery fee" amount="$11.50" tone="warning" />
+            <PreviewLineItem label="Device protection add-on" amount="$19.99" tone="warning" />
+            <PreviewLineItem label="Local taxes and surcharges" amount="$7.79" tone="neutral" />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ExpectationStep({ title, body }: { title: string; body: string }) {
+  return (
+    <article className="rounded-[24px] border border-stone-200 bg-white/75 p-5">
+      <h3 className="text-base font-semibold text-stone-950">{title}</h3>
+      <p className="mt-2 text-sm leading-6 text-stone-700">{body}</p>
+    </article>
+  );
+}
+
+function PreviewLineItem({
+  label,
+  amount,
+  tone,
+}: {
+  label: string;
+  amount: string;
+  tone: "neutral" | "warning";
+}) {
+  return (
+    <div
+      className={`flex items-center justify-between rounded-[22px] border px-4 py-3 ${
+        tone === "warning"
+          ? "border-red-200 bg-red-50/80 text-red-900"
+          : "border-stone-200 bg-stone-50/80 text-stone-800"
+      }`}
+    >
+      <span className="text-sm font-medium">{label}</span>
+      <span className="text-sm font-semibold">{amount}</span>
     </div>
   );
 }

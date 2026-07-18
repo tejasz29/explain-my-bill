@@ -4,8 +4,11 @@ import type { ComponentType } from "react";
 import {
   AlertTriangle,
   BadgeDollarSign,
+  CircleAlert,
   FileText,
+  ShieldCheck,
   Sparkles,
+  TrendingUp,
 } from "lucide-react";
 import {
   Bar,
@@ -29,6 +32,11 @@ const CHART_COLORS = ["#0f766e", "#0ea5a4", "#f59e0b", "#c2410c", "#2563eb", "#7
 
 export function ResultsDashboard({ analysis }: ResultsDashboardProps) {
   const flaggedItems = analysis.items.filter((item) => item.flagged);
+  const flaggedAmount = flaggedItems.reduce((sum, item) => sum + item.amount, 0);
+  const largestItem =
+    analysis.items.length > 0
+      ? [...analysis.items].sort((left, right) => right.amount - left.amount)[0]
+      : null;
 
   return (
     <section className="animate-float-up space-y-6">
@@ -67,6 +75,38 @@ export function ResultsDashboard({ analysis }: ResultsDashboardProps) {
             />
           </div>
         </div>
+
+        <div className="mt-6 grid gap-3 md:grid-cols-3">
+          <InsightCard
+            label="Largest charge"
+            value={largestItem ? largestItem.name : "No items found"}
+            detail={
+              largestItem ? formatCurrency(largestItem.amount, analysis.currency) : "No charge data"
+            }
+            icon={TrendingUp}
+          />
+          <InsightCard
+            label="Flagged amount"
+            value={formatCurrency(flaggedAmount, analysis.currency)}
+            detail={
+              flaggedItems.length > 0
+                ? "Total amount connected to suspicious-looking fees"
+                : "No flagged charges in this bill"
+            }
+            icon={flaggedItems.length > 0 ? CircleAlert : ShieldCheck}
+            tone={flaggedItems.length > 0 ? "warning" : "safe"}
+          />
+          <InsightCard
+            label="What to do next"
+            value={flaggedItems.length > 0 ? "Review flagged items" : "Bill looks straightforward"}
+            detail={
+              flaggedItems.length > 0
+                ? "Double-check these line items with your statement or provider."
+                : "You can still inspect the charge breakdown below."
+            }
+            icon={Sparkles}
+          />
+        </div>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
@@ -92,10 +132,10 @@ export function ResultsDashboard({ analysis }: ResultsDashboardProps) {
                   dataKey="name"
                   tickLine={false}
                   axisLine={false}
-                  interval={0}
-                  angle={-18}
-                  textAnchor="end"
-                  height={70}
+                  interval="preserveStartEnd"
+                  angle={analysis.items.length > 5 ? -18 : 0}
+                  textAnchor={analysis.items.length > 5 ? "end" : "middle"}
+                  height={analysis.items.length > 5 ? 70 : 40}
                   tick={{ fill: "#525866", fontSize: 12 }}
                 />
                 <YAxis
@@ -195,6 +235,9 @@ export function ResultsDashboard({ analysis }: ResultsDashboardProps) {
         >
           Full item explanations
         </h3>
+        <p className="mt-2 text-sm text-stone-600">
+          A plain-English explanation for each charge on the bill.
+        </p>
         <div className="mt-5 space-y-4">
           {analysis.items.map((item) => (
             <article
@@ -222,6 +265,46 @@ export function ResultsDashboard({ analysis }: ResultsDashboardProps) {
         </div>
       </div>
     </section>
+  );
+}
+
+type InsightCardProps = {
+  label: string;
+  value: string;
+  detail: string;
+  icon: ComponentType<{ className?: string }>;
+  tone?: "default" | "warning" | "safe";
+};
+
+function InsightCard({
+  label,
+  value,
+  detail,
+  icon: Icon,
+  tone = "default",
+}: InsightCardProps) {
+  const toneClasses =
+    tone === "warning"
+      ? "border-red-200 bg-red-50/85 text-red-950"
+      : tone === "safe"
+        ? "border-emerald-200 bg-emerald-50/85 text-emerald-950"
+        : "border-stone-200 bg-white/82 text-stone-950";
+  const iconClasses =
+    tone === "warning"
+      ? "text-red-700"
+      : tone === "safe"
+        ? "text-emerald-700"
+        : "text-teal-700";
+
+  return (
+    <div className={`rounded-[24px] border p-4 ${toneClasses}`}>
+      <div className="flex items-center gap-3">
+        <Icon className={`h-5 w-5 ${iconClasses}`} />
+        <span className="text-xs font-semibold uppercase tracking-[0.18em] opacity-80">{label}</span>
+      </div>
+      <p className="mt-3 text-lg font-semibold">{value}</p>
+      <p className="mt-2 text-sm leading-6 opacity-80">{detail}</p>
+    </div>
   );
 }
 
