@@ -1,10 +1,11 @@
 "use client";
 
-import { ChangeEvent, DragEvent, useRef, useState } from "react";
+import { ChangeEvent, DragEvent, useEffect, useRef, useState } from "react";
 import { FileUp, FileText, ImageIcon, UploadCloud } from "lucide-react";
 
 type UploadZoneProps = {
   disabled: boolean;
+  resetSignal: number;
   selectedFileName?: string | null;
   onSelectFile: (file: File) => void;
   onInvalidFile?: (message: string) => void;
@@ -19,12 +20,19 @@ const ACCEPTED_TYPES = [
 
 export function UploadZone({
   disabled,
+  resetSignal,
   selectedFileName,
   onSelectFile,
   onInvalidFile,
 }: UploadZoneProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.value = "";
+    }
+  }, [resetSignal]);
 
   function handleFile(file?: File) {
     if (!file) {

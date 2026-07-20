@@ -8,11 +8,11 @@ from typing import Any
 from openai import APIError, OpenAI, RateLimitError
 from pydantic import ValidationError
 
+from app.config import DEFAULT_MODEL_NAME
 from app.schemas import BillAnalysisResponse
 
 
 GROQ_BASE_URL = "https://api.groq.com/openai/v1"
-DEFAULT_MODEL_NAME = "qwen/qwen3.6-27b"
 
 
 class GPTServiceError(Exception):
@@ -56,7 +56,7 @@ Rules:
 def _get_client() -> OpenAI:
     api_key = os.getenv("GROQ_API_KEY")
     if not api_key:
-        raise RuntimeError("GROQ_API_KEY is not set.")
+        raise GPTServiceError("GROQ_API_KEY is not configured on the server.")
 
     return OpenAI(api_key=api_key, base_url=GROQ_BASE_URL)
 

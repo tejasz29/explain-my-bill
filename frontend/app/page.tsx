@@ -16,6 +16,7 @@ export default function HomePage() {
   const [analysis, setAnalysis] = useState<BillAnalysis | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [resetSignal, setResetSignal] = useState(0);
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
 
   async function handleFileUpload(file: File) {
@@ -55,6 +56,7 @@ export default function HomePage() {
     setAnalysis(null);
     setError(null);
     setSelectedFileName(null);
+    setResetSignal((currentValue) => currentValue + 1);
   }
 
   return (
@@ -91,6 +93,7 @@ export default function HomePage() {
 
           <UploadZone
             disabled={isLoading}
+            resetSignal={resetSignal}
             selectedFileName={selectedFileName}
             onSelectFile={handleFileUpload}
             onInvalidFile={setError}
