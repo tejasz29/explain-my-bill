@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { ArrowRight, RefreshCcw, ShieldCheck, Zap } from "lucide-react";
+import { ArrowRight, RefreshCw, ShieldCheck, Zap } from "lucide-react";
 
 import { ErrorBanner } from "@/components/error-banner";
 import { LoadingSkeleton } from "@/components/loading-skeleton";
@@ -58,21 +58,21 @@ export default function HomePage() {
   }
 
   return (
-    <main className="min-h-screen px-4 py-8 md:px-8 lg:px-12">
+    <main id="main-content" className="min-h-screen px-4 py-8 md:px-8 lg:px-12">
       <div className="mx-auto max-w-7xl">
-        <section className="mb-8 animate-float-up rounded-[36px] border border-white/70 bg-white/55 px-6 py-6 shadow-[0_24px_80px_rgba(117,97,68,0.12)] backdrop-blur-xl md:px-8">
+        <section className="mb-10 animate-float-up rounded-2xl border border-white/70 bg-white/55 px-6 py-8 shadow-[0_24px_80px_rgba(117,97,68,0.12)] backdrop-blur-xl md:px-8 lg:px-10">
           <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
             <div className="max-w-3xl">
-              <p className="text-sm font-semibold uppercase tracking-[0.26em] text-teal-800">
+              <p className="text-sm font-semibold uppercase tracking-[0.26em] text-amber-700">
                 OpenAI Build Week Demo
               </p>
               <h1
-                className="mt-3 text-4xl font-bold tracking-tight text-stone-950 md:text-6xl"
-                style={{ fontFamily: "var(--font-heading), sans-serif" }}
+                className="mt-3 text-4xl font-bold tracking-tight text-slate-950 md:text-6xl"
+                style={{ fontFamily: "var(--font-sans), sans-serif" }}
               >
                 Explain My Bill
               </h1>
-              <p className="mt-4 text-base leading-7 text-stone-700 md:text-lg">
+              <p className="mt-4 text-base leading-7 text-slate-600 md:text-lg">
                 A fast bill interpreter that turns confusing charges into plain-language
                 explanations and highlights anything worth disputing.
               </p>
@@ -87,7 +87,9 @@ export default function HomePage() {
         </section>
 
         <div className="space-y-6">
-          {error ? <ErrorBanner message={error} onDismiss={() => setError(null)} /> : null}
+          {error ? (
+            <ErrorBanner message={error} onDismiss={() => setError(null)} />
+          ) : null}
 
           <UploadZone
             disabled={isLoading}
@@ -97,17 +99,17 @@ export default function HomePage() {
           />
 
           {selectedFileName ? (
-            <div className="flex flex-col gap-3 rounded-[28px] border border-stone-200 bg-white/70 px-4 py-4 text-sm text-stone-700 shadow-sm backdrop-blur md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white/70 px-4 py-4 text-sm text-slate-600 shadow-sm backdrop-blur md:flex-row md:items-center md:justify-between">
               <div>
-                Current file: <span className="font-semibold text-stone-950">{selectedFileName}</span>
+                Current file: <span className="font-semibold text-slate-950">{selectedFileName}</span>
               </div>
               {(analysis || error) && (
                 <button
                   type="button"
                   onClick={resetExperience}
-                  className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-stone-700 transition hover:bg-stone-50"
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
                 >
-                  <RefreshCcw className="h-4 w-4" />
+                  <RefreshCw className="h-4 w-4" />
                   Try another bill
                 </button>
               )}
@@ -125,9 +127,9 @@ export default function HomePage() {
 
 function FeaturePill({ label, icon }: { label: string; icon: ReactNode }) {
   return (
-    <div className="rounded-[22px] border border-white/70 bg-white/75 px-4 py-4 text-sm font-medium text-stone-800 shadow-sm backdrop-blur">
+    <div className="rounded-2xl border border-white/70 bg-white/75 px-4 py-4 text-sm font-medium text-slate-800 shadow-sm backdrop-blur">
       <div className="flex items-center gap-2">
-        <span className="text-teal-700">{icon}</span>
+        <span className="text-amber-700">{icon}</span>
         <span>{label}</span>
       </div>
     </div>
@@ -137,13 +139,13 @@ function FeaturePill({ label, icon }: { label: string; icon: ReactNode }) {
 function EmptyState() {
   return (
     <section className="grid gap-6 animate-float-up xl:grid-cols-[0.95fr_1.05fr]">
-      <div className="glass-panel rounded-[32px] p-7">
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-stone-600">
+      <div className="rounded-2xl border border-white/70 bg-white/75 p-7 shadow-sm backdrop-blur">
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
           What you will get
         </p>
         <h2
-          className="mt-3 text-3xl font-bold tracking-tight text-stone-950"
-          style={{ fontFamily: "var(--font-heading), sans-serif" }}
+          className="mt-3 text-3xl font-bold tracking-tight text-slate-950"
+          style={{ fontFamily: "var(--font-sans), sans-serif" }}
         >
           A fast, human-readable audit of a confusing bill.
         </h2>
@@ -163,17 +165,17 @@ function EmptyState() {
         </div>
       </div>
 
-      <div className="glass-panel rounded-[32px] p-7">
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-stone-600">
+      <div className="rounded-2xl border border-white/70 bg-white/75 p-7 shadow-sm backdrop-blur">
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
           Demo preview
         </p>
-        <div className="mt-4 rounded-[28px] border border-stone-200 bg-white/80 p-5">
+        <div className="mt-4 rounded-2xl border border-slate-200 bg-white/80 p-5">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-sm text-stone-600">Expected dashboard summary</p>
+              <p className="text-sm text-slate-500">Expected dashboard summary</p>
               <h3
-                className="mt-2 text-3xl font-bold text-stone-950"
-                style={{ fontFamily: "var(--font-heading), sans-serif" }}
+                className="mt-2 text-3xl font-bold text-slate-950"
+                style={{ fontFamily: "var(--font-sans), sans-serif" }}
               >
                 $184.27
               </h3>
@@ -197,9 +199,9 @@ function EmptyState() {
 
 function ExpectationStep({ title, body }: { title: string; body: string }) {
   return (
-    <article className="rounded-[24px] border border-stone-200 bg-white/75 p-5">
-      <h3 className="text-base font-semibold text-stone-950">{title}</h3>
-      <p className="mt-2 text-sm leading-6 text-stone-700">{body}</p>
+    <article className="rounded-2xl border border-slate-200 bg-white/75 p-5">
+      <h3 className="text-base font-semibold text-slate-950">{title}</h3>
+      <p className="mt-2 text-sm leading-6 text-slate-600">{body}</p>
     </article>
   );
 }
@@ -215,10 +217,10 @@ function PreviewLineItem({
 }) {
   return (
     <div
-      className={`flex items-center justify-between rounded-[22px] border px-4 py-3 ${
+      className={`flex items-center justify-between rounded-2xl border px-4 py-3 ${
         tone === "warning"
           ? "border-red-200 bg-red-50/80 text-red-900"
-          : "border-stone-200 bg-stone-50/80 text-stone-800"
+          : "border-slate-200 bg-slate-50/80 text-slate-800"
       }`}
     >
       <span className="text-sm font-medium">{label}</span>

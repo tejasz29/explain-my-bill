@@ -1,17 +1,13 @@
 import type { Metadata } from "next";
-import { Space_Grotesk, Source_Serif_4 } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import type { ReactNode } from "react";
 
 import "./globals.css";
 
-const headingFont = Space_Grotesk({
+const font = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  variable: "--font-heading",
-});
-
-const bodyFont = Source_Serif_4({
-  subsets: ["latin"],
-  variable: "--font-body",
+  variable: "--font-sans",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -25,13 +21,16 @@ export default function RootLayout({
   children: ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
-        className={`${headingFont.variable} ${bodyFont.variable} antialiased`}
+        className={`${font.variable} antialiased`}
         style={{
-          fontFamily: "var(--font-body), Georgia, serif",
+          fontFamily: "var(--font-sans), system-ui, -apple-system, sans-serif",
         }}
       >
+        <a href="#main-content" className="skip-link">
+          Skip to main content
+        </a>
         {children}
       </body>
     </html>
