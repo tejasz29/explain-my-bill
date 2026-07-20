@@ -8,6 +8,9 @@ DEFAULT_MODEL_NAME = "qwen/qwen3.6-27b"
 DEFAULT_ALLOWED_ORIGINS = ("http://localhost:3000", "http://127.0.0.1:3000")
 DEFAULT_MAX_UPLOAD_SIZE_BYTES = 10 * 1024 * 1024
 DEFAULT_MAX_PDF_PAGES = 12
+DEFAULT_MIN_PDF_TEXT_CHARACTERS = 120
+DEFAULT_RATE_LIMIT_REQUESTS = 5
+DEFAULT_RATE_LIMIT_WINDOW_SECONDS = 600
 
 
 @dataclass(frozen=True)
@@ -17,6 +20,9 @@ class Settings:
     allowed_origins: tuple[str, ...]
     max_upload_size_bytes: int
     max_pdf_pages: int
+    min_pdf_text_characters: int
+    rate_limit_requests: int
+    rate_limit_window_seconds: int
 
     @property
     def groq_configured(self) -> bool:
@@ -57,4 +63,13 @@ def get_settings() -> Settings:
             "MAX_UPLOAD_SIZE_BYTES", DEFAULT_MAX_UPLOAD_SIZE_BYTES
         ),
         max_pdf_pages=_parse_int_env("MAX_PDF_PAGES", DEFAULT_MAX_PDF_PAGES),
+        min_pdf_text_characters=_parse_int_env(
+            "MIN_PDF_TEXT_CHARACTERS", DEFAULT_MIN_PDF_TEXT_CHARACTERS
+        ),
+        rate_limit_requests=_parse_int_env(
+            "RATE_LIMIT_REQUESTS", DEFAULT_RATE_LIMIT_REQUESTS
+        ),
+        rate_limit_window_seconds=_parse_int_env(
+            "RATE_LIMIT_WINDOW_SECONDS", DEFAULT_RATE_LIMIT_WINDOW_SECONDS
+        ),
     )

@@ -9,7 +9,7 @@ from openai import APIError, OpenAI, RateLimitError
 from pydantic import ValidationError
 
 from app.config import DEFAULT_MODEL_NAME
-from app.schemas import BillAnalysisResponse
+from app.schemas import RawBillAnalysisResponse
 
 
 GROQ_BASE_URL = "https://api.groq.com/openai/v1"
@@ -22,11 +22,18 @@ class GPTServiceError(Exception):
 class GPTQuotaError(GPTServiceError):
     pass
 
+
+class GPTNotBillError(GPTServiceError):
+    pass
+
+
 SYSTEM_PROMPT = """
 You analyze consumer bills and explain charges in clear, plain language.
 
 Return ONLY strict JSON with this exact shape:
 {
+  "is_bill": boolean,
+  "error": string | null,
   "total_amount": number,
   "currency": string,
   "items": [
@@ -46,6 +53,7 @@ Rules:
 - Do not wrap the JSON in markdown.
 - Keep explanations concise and easy for a non-expert to understand.
 - Mark "flagged" true only when something plausibly looks unusual, duplicative, unclear, or excessive.
+- If the document is not a consumer bill, return {"is_bill": false, "error": "..."} and keep the remaining fields safe defaults.
 - If nothing seems suspicious, return an empty anomalies array and flagged=false for normal items.
 - Use the currency shown in the bill when possible.
 - Make sure numeric fields are numbers, not strings.
@@ -114,7 +122,7 @@ def _extract_json_object(raw_text: str) -> str:
     return cleaned
 
 
-def _parse_response_payload(raw_text: str) -> BillAnalysisResponse:
+def _parse_response_payload(raw_text: str):
     cleaned = _extract_json_object(raw_text)
 
     try:
@@ -123,12 +131,20 @@ def _parse_response_payload(raw_text: str) -> BillAnalysisResponse:
         raise ValueError("The model returned malformed JSON.") from exc
 
     try:
-        return BillAnalysisResponse.model_validate(payload)
+        parsed = RawBillAnalysisResponse.model_validate(payload)
     except ValidationError as exc:
         raise ValueError("The model response did not match the expected schema.") from exc
 
+    if not parsed.is_bill:
+        raise GPTNotBillError(
+            parsed.error
+            or "This file does not appear to be a consumer bill. Please upload a bill image or PDF."
+        )
 
-def analyze_bill_text(extracted_text: str) -> BillAnalysisResponse:
+    return parsed.to_analysis_response()
+
+
+def analyze_bill_text(extracted_text: str):
     client = _get_client()
     model_name = _get_model_name()
 
@@ -163,7 +179,7 @@ def analyze_bill_text(extracted_text: str) -> BillAnalysisResponse:
     return _parse_response_payload(response.output_text)
 
 
-def analyze_bill_image(image_data_url: str) -> BillAnalysisResponse:
+def analyze_bill_image(image_data_url: str):
     client = _get_client()
     model_name = _get_model_name()
 

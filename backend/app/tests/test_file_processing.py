@@ -36,6 +36,9 @@ class ValidateUploadBytesTests(unittest.TestCase):
             allowed_origins=("http://localhost:3000",),
             max_upload_size_bytes=32,
             max_pdf_pages=2,
+            min_pdf_text_characters=100,
+            rate_limit_requests=5,
+            rate_limit_window_seconds=60,
         )
 
     def test_rejects_empty_upload(self) -> None:

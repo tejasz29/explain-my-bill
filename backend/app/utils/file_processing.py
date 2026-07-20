@@ -108,6 +108,10 @@ def extract_pdf_text(file_bytes: bytes, max_pages: int) -> str:
     return "\n\n".join(chunks).strip()
 
 
+def is_scanned_pdf_text(text: str, min_characters: int) -> bool:
+    return len(text.strip()) < min_characters
+
+
 def encode_image_base64(file_bytes: bytes) -> str:
     return base64.b64encode(file_bytes).decode("utf-8")
 

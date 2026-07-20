@@ -15,8 +15,13 @@ const bodyFont = Source_Serif_4({
 });
 
 export const metadata: Metadata = {
-  title: "Explain My Bill",
-  description: "Upload a bill and get a plain-English breakdown with suspicious fees flagged.",
+  title: "Explain My Bill - AI Bill Analyzer",
+  description: "Upload any bill and get a plain-English breakdown of every charge with suspicious fees flagged instantly.",
+  openGraph: {
+    title: "Explain My Bill",
+    description: "Your bill has secrets. We expose the charges that deserve a closer look.",
+    type: "website",
+  },
 };
 
 export default function RootLayout({

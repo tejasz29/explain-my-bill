@@ -1,9 +1,10 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowRight, RefreshCcw, ShieldCheck, Zap } from "lucide-react";
 
+import { ErrorBoundary } from "@/components/error-boundary";
 import { ErrorBanner } from "@/components/error-banner";
 import { LoadingSkeleton } from "@/components/loading-skeleton";
 import { ResultsDashboard } from "@/components/results-dashboard";
@@ -17,15 +18,41 @@ export default function HomePage() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [resetSignal, setResetSignal] = useState(0);
-  const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadStage, setUploadStage] = useState<"idle" | "preview" | "analyzing" | "success">(
+    "idle",
+  );
 
-  async function handleFileUpload(file: File) {
-    setSelectedFileName(file.name);
+  useEffect(() => {
+    if (!analysis) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      setUploadStage("success");
+    }, 250);
+
+    return () => window.clearTimeout(timeout);
+  }, [analysis]);
+
+  function handleFileSelection(file: File) {
+    setSelectedFile(file);
+    setAnalysis(null);
     setError(null);
+    setUploadStage("preview");
+  }
+
+  async function handleFileUpload() {
+    if (!selectedFile) {
+      setError("Choose a bill file before starting the analysis.");
+      return;
+    }
+
     setIsLoading(true);
+    setUploadStage("analyzing");
 
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("file", selectedFile);
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/analyze-bill`, {
@@ -39,9 +66,10 @@ export default function HomePage() {
         throw new Error(payload.detail || "Bill analysis failed.");
       }
 
-      setAnalysis(payload);
+      setAnalysis(payload.data);
     } catch (caughtError) {
       setAnalysis(null);
+      setUploadStage(selectedFile ? "preview" : "idle");
       setError(
         caughtError instanceof Error
           ? caughtError.message
@@ -55,7 +83,9 @@ export default function HomePage() {
   function resetExperience() {
     setAnalysis(null);
     setError(null);
-    setSelectedFileName(null);
+    setIsLoading(false);
+    setSelectedFile(null);
+    setUploadStage("idle");
     setResetSignal((currentValue) => currentValue + 1);
   }
 
@@ -94,21 +124,24 @@ export default function HomePage() {
           <UploadZone
             disabled={isLoading}
             resetSignal={resetSignal}
-            selectedFileName={selectedFileName}
-            onSelectFile={handleFileUpload}
+            selectedFile={selectedFile}
+            stage={uploadStage}
+            onSelectFile={handleFileSelection}
+            onAnalyzeFile={handleFileUpload}
+            onResetSelection={resetExperience}
             onInvalidFile={setError}
           />
 
-          {selectedFileName ? (
+          {selectedFile ? (
             <div className="flex flex-col gap-3 rounded-[28px] border border-stone-200 bg-white/70 px-4 py-4 text-sm text-stone-700 shadow-sm backdrop-blur md:flex-row md:items-center md:justify-between">
               <div>
-                Current file: <span className="font-semibold text-stone-950">{selectedFileName}</span>
+                Current file: <span className="font-semibold text-stone-950">{selectedFile.name}</span>
               </div>
-              {(analysis || error) && (
+              {(analysis || error || uploadStage === "preview") && (
                 <button
                   type="button"
                   onClick={resetExperience}
-                  className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-stone-700 transition hover:bg-stone-50"
+                  className="inline-flex min-h-11 items-center gap-2 rounded-full border border-stone-200 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-stone-700 transition hover:bg-stone-50"
                 >
                   <RefreshCcw className="h-4 w-4" />
                   Try another bill
@@ -118,8 +151,12 @@ export default function HomePage() {
           ) : null}
 
           {isLoading ? <LoadingSkeleton /> : null}
-          {!isLoading && analysis ? <ResultsDashboard analysis={analysis} /> : null}
-          {!isLoading && !analysis ? <EmptyState /> : null}
+          {!isLoading && analysis ? (
+            <ErrorBoundary resetKey={resetSignal}>
+              <ResultsDashboard analysis={analysis} />
+            </ErrorBoundary>
+          ) : null}
+          {!isLoading && !analysis && uploadStage === "idle" ? <EmptyState /> : null}
         </div>
       </div>
     </main>
