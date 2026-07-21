@@ -145,7 +145,9 @@ export function ResultsDashboard({ analysis }: ResultsDashboardProps) {
                 />
                 <Tooltip
                   cursor={{ fill: "rgba(245, 158, 11, 0.08)" }}
-                  formatter={(value: number) => formatCurrency(value, analysis.currency)}
+                  formatter={(value: number | undefined) =>
+                    formatCurrency(value ?? 0, analysis.currency)
+                  }
                   contentStyle={{
                     borderRadius: 18,
                     border: "1px solid rgba(15, 23, 42, 0.08)",
