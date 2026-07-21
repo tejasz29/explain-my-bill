@@ -10,7 +10,7 @@ import { ResultsDashboard } from "@/components/results-dashboard";
 import { UploadZone } from "@/components/upload-zone";
 import type { BillAnalysis } from "@/types/bill";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
 export default function HomePage() {
   const [analysis, setAnalysis] = useState<BillAnalysis | null>(null);
@@ -27,7 +27,10 @@ export default function HomePage() {
     formData.append("file", file);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/analyze-bill`, {
+      const url = API_BASE_URL
+        ? `${API_BASE_URL}/api/analyze-bill`
+        : "/api/analyze-bill";
+      const response = await fetch(url, {
         method: "POST",
         body: formData,
       });

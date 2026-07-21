@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -15,9 +17,11 @@ from app.utils.file_processing import build_data_url, detect_file_kind, extract_
 
 app = FastAPI(title="Explain My Bill API")
 
+ALLOWED_ORIGINS = os.getenv("CORS_ORIGINS", "*").split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
