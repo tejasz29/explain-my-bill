@@ -2,21 +2,21 @@ from __future__ import annotations
 
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class BillItem(BaseModel):
-    name: str = Field(..., min_length=1)
+    name: str
     amount: float
-    explanation: str = Field(..., min_length=1)
+    explanation: str
     flagged: bool
     flag_reason: Optional[str] = None
 
 
 class BillAnalysisResponse(BaseModel):
     total_amount: float
-    currency: str = Field(..., min_length=1)
+    currency: str
     items: List[BillItem]
     anomalies: List[str]
-    summary: str = Field(..., min_length=1)
+    summary: str
 

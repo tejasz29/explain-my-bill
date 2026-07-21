@@ -128,7 +128,7 @@ def _parse_response_payload(raw_text: str) -> BillAnalysisResponse:
     try:
         return BillAnalysisResponse.model_validate(payload)
     except ValidationError as exc:
-        raise ValueError("The model response did not match the expected schema.") from exc
+        raise ValueError(str(exc)) from exc
 
 
 def analyze_bill_text(extracted_text: str) -> BillAnalysisResponse:
