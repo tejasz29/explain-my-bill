@@ -80,6 +80,14 @@ Optional: choose a different Groq model for the backend session:
 $env:GROQ_MODEL="qwen/qwen3.6-27b"
 ```
 
+Optional hardening configuration:
+
+```powershell
+$env:ALLOWED_ORIGINS="http://localhost:3000,http://127.0.0.1:3000"
+$env:MAX_UPLOAD_SIZE_BYTES="10485760"
+$env:MAX_PDF_PAGES="12"
+```
+
 Start the backend:
 
 ```powershell
@@ -171,6 +179,9 @@ The app includes basic MVP error handling for:
 - malformed model JSON
 - Groq API failures
 - Groq quota or rate-limit failures
+- oversized uploads
+- mismatched file signatures or spoofed content types
+- PDFs that exceed the configured page limit
 
 If your Groq account has no available quota, the frontend will show a user-friendly error banner and the backend will return a `429` response.
 
@@ -189,6 +200,7 @@ If your Groq account has no available quota, the frontend will show a user-frien
 - No files are persisted after request handling.
 - Prompt logic is isolated in `backend/app/services/gpt_service.py` for easy tuning.
 - The app is optimized for a short live demo and local development setup.
+- The backend now enforces file-signature validation, upload size limits, and PDF page-count limits.
 
 ## Troubleshooting
 
