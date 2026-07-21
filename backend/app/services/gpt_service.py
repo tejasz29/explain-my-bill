@@ -152,7 +152,7 @@ def analyze_bill_text(extracted_text: str) -> BillAnalysisResponse:
                     ),
                 },
             ],
-            response_format={"type": "json_object"},
+            response_format={"type": "text"},
         )
 
         raw = response.choices[0].message.content
@@ -195,7 +195,7 @@ def analyze_bill_image(image_data_url: str) -> BillAnalysisResponse:
                     ],
                 },
             ],
-            response_format={"type": "json_object"},
+            response_format={"type": "text"},
         )
 
         raw = response.choices[0].message.content
