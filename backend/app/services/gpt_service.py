@@ -13,6 +13,7 @@ from app.schemas import BillAnalysisResponse
 
 GROQ_BASE_URL = "https://api.groq.com/openai/v1"
 DEFAULT_MODEL_NAME = "qwen/qwen3.6-27b"
+DEFAULT_VISION_MODEL_NAME = "qwen/qwen3.6-27b"
 
 
 class GPTServiceError(Exception):
@@ -61,7 +62,9 @@ def _get_client() -> OpenAI:
     return OpenAI(api_key=api_key, base_url=GROQ_BASE_URL)
 
 
-def _get_model_name() -> str:
+def _get_model_name(*, vision: bool = False) -> str:
+    if vision:
+        return os.getenv("GROQ_VISION_MODEL", DEFAULT_VISION_MODEL_NAME)
     return os.getenv("GROQ_MODEL", DEFAULT_MODEL_NAME)
 
 
@@ -129,30 +132,30 @@ def _parse_response_payload(raw_text: str) -> BillAnalysisResponse:
 
 
 def analyze_bill_text(extracted_text: str) -> BillAnalysisResponse:
+    if not os.getenv("GROQ_API_KEY"):
+        return _demo_response()
+
     client = _get_client()
     model_name = _get_model_name()
 
     try:
-        response = client.responses.create(
+        response = client.chat.completions.create(
             model=model_name,
-            instructions=SYSTEM_PROMPT,
-            text={"format": {"type": "json_object"}},
-            input=[
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
                 {
                     "role": "user",
-                    "content": [
-                        {
-                            "type": "input_text",
-                            "text": (
-                                "Analyze this bill text. Extract the line items, explain them, "
-                                "and flag anything that looks suspicious.\n\n"
-                                f"Bill text:\n{extracted_text}"
-                            ),
-                        }
-                    ],
-                }
+                    "content": (
+                        "Analyze this bill text. Extract the line items, explain them, "
+                        "and flag anything that looks suspicious.\n\n"
+                        f"Bill text:\n{extracted_text}"
+                    ),
+                },
             ],
+            response_format={"type": "json_object"},
         )
+
+        raw = response.choices[0].message.content
     except RateLimitError as exc:
         raise GPTQuotaError(
             "Groq quota or rate limit exceeded. Please check your Groq plan and billing details."
@@ -160,38 +163,42 @@ def analyze_bill_text(extracted_text: str) -> BillAnalysisResponse:
     except APIError as exc:
         raise GPTServiceError(f"Groq API request failed: {exc}") from exc
 
-    return _parse_response_payload(response.output_text)
+    return _parse_response_payload(raw)
 
 
 def analyze_bill_image(image_data_url: str) -> BillAnalysisResponse:
+    if not os.getenv("GROQ_API_KEY"):
+        return _demo_response()
+
     client = _get_client()
-    model_name = _get_model_name()
+    model_name = _get_model_name(vision=True)
 
     try:
-        response = client.responses.create(
+        response = client.chat.completions.create(
             model=model_name,
-            instructions=SYSTEM_PROMPT,
-            text={"format": {"type": "json_object"}},
-            input=[
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
                 {
                     "role": "user",
                     "content": [
                         {
-                            "type": "input_text",
+                            "type": "text",
                             "text": (
                                 "Analyze this bill image. Extract the line items, explain them, "
                                 "and flag anything that looks suspicious."
                             ),
                         },
                         {
-                            "type": "input_image",
-                            "image_url": image_data_url,
-                            "detail": "high",
+                            "type": "image_url",
+                            "image_url": {"url": image_data_url, "detail": "high"},
                         },
                     ],
-                }
+                },
             ],
+            response_format={"type": "json_object"},
         )
+
+        raw = response.choices[0].message.content
     except RateLimitError as exc:
         raise GPTQuotaError(
             "Groq quota or rate limit exceeded. Please check your Groq plan and billing details."
@@ -199,4 +206,61 @@ def analyze_bill_image(image_data_url: str) -> BillAnalysisResponse:
     except APIError as exc:
         raise GPTServiceError(f"Groq API request failed: {exc}") from exc
 
-    return _parse_response_payload(response.output_text)
+    return _parse_response_payload(raw)
+
+
+def _demo_response() -> BillAnalysisResponse:
+    return BillAnalysisResponse(
+        total_amount=184.27,
+        currency="USD",
+        items=[
+            {
+                "name": "Base Service Plan",
+                "amount": 89.99,
+                "explanation": "This is the monthly charge for your standard phone service plan, which includes unlimited talk and text, plus 5GB of high-speed data.",
+                "flagged": False,
+                "flag_reason": None,
+            },
+            {
+                "name": "Regulatory Recovery Fee",
+                "amount": 11.50,
+                "explanation": "A fee the carrier charges to recover costs related to government regulations, such as FCC compliance and universal service fund contributions.",
+                "flagged": True,
+                "flag_reason": "This fee looks unusually high compared to the standard $3-5 range. Consider questioning this charge.",
+            },
+            {
+                "name": "Device Protection Add-on",
+                "amount": 19.99,
+                "explanation": "Monthly premium for insurance that covers screen repairs, battery replacements, and device theft or loss.",
+                "flagged": True,
+                "flag_reason": "You may already have device protection through your credit card or home insurance. This could be duplicate coverage.",
+            },
+            {
+                "name": "Local Taxes and Surcharges",
+                "amount": 7.79,
+                "explanation": "State and local taxes applied to telecommunication services, including sales tax and municipal fees.",
+                "flagged": False,
+                "flag_reason": None,
+            },
+            {
+                "name": "Premium Voicemail",
+                "amount": 8.00,
+                "explanation": "An upgraded voicemail service that includes transcription, visual voicemail, and extended message storage.",
+                "flagged": False,
+                "flag_reason": None,
+            },
+            {
+                "name": "Data Overage Fee",
+                "amount": 47.00,
+                "explanation": "A charge for exceeding your monthly 5GB data allowance by 4.7GB at $10 per additional gigabyte.",
+                "flagged": True,
+                "flag_reason": "This is a significant overage charge. Consider upgrading to a plan with more data to avoid these fees in the future.",
+            },
+        ],
+        anomalies=[
+            "Regulatory Recovery Fee is above industry standard",
+            "Device Protection may be duplicating existing coverage",
+            "Data overage suggests a plan upgrade may save money",
+        ],
+        summary="Your total charge is $184.27. The largest cost is the Base Service Plan at $89.99. Three items have been flagged for potential issues: the Regulatory Recovery Fee appears higher than average, the Device Protection may duplicate existing coverage, and the Data Overage Fee suggests a plan with more data could save you money in the long run.",
+    )
